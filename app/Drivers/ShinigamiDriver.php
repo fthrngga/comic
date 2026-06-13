@@ -8,19 +8,38 @@ use Illuminate\Support\Facades\Log;
 
 class ShinigamiDriver implements ComicDriverInterface
 {
-    protected string $baseUrl = 'https://shinigami.id'; // Adjust according to real endpoint if different
+    // Menggunakan shinigami.to sesuai dengan URL yang ada di browser Bos sebelumnya
+    protected string $baseUrl = 'https://shinigami.to'; 
 
     public function getMangaDetails(string $sourceMangaId): array
     {
-        // Implementation for getting manga details would go here
+        // Implementasi detail manga menyusul
         return [];
     }
 
     public function getChapterImages(string $mangaId, string $chapterId): array
     {
         try {
-            // This endpoint is just an example based on the prompt instructions.
-            $response = Http::timeout(15)->get("{$this->baseUrl}/api/chapter/{$chapterId}");
+            // URL target API
+            $endpoint = "{$this->baseUrl}/api/chapter/{$chapterId}";
+
+            // 1. Serangan menembus Cloudflare dengan Header palsu (menyamar jadi browser)
+            $response = Http::withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => 'application/json, text/plain, */*',
+                'Referer' => "{$this->baseUrl}/",
+                'Origin' => $this->baseUrl,
+            ])->timeout(15)->get($endpoint);
+
+            // ==========================================
+            // JEBAKAN DEBUGGING (KDV TRAP)
+            // ==========================================
+            dd([
+                '1_TARGET_URL' => $endpoint,
+                '2_HTTP_STATUS' => $response->status(),
+                '3_RAW_BODY' => $response->json() ?? $response->body(),
+            ]);
+            // ==========================================
 
             if ($response->failed()) {
                 Log::error("Shinigami API failed to fetch chapter images for ID: {$chapterId}", [
@@ -33,14 +52,14 @@ class ShinigamiDriver implements ComicDriverInterface
             $data = $response->json();
             $images = [];
 
-            // Example response structure assumption based on instructions:
-            // { "base_url": "https://cdn...", "path": "/chapter-1/", "chapter": { "data": ["01.jpg", "02.jpg"] } }
-            $baseUrl = $data['base_url'] ?? '';
-            $path = $data['path'] ?? '';
-            $chapterData = $data['chapter']['data'] ?? [];
+            // 2. Perbaikan Struktur JSON (harus masuk ke dalam index ['data'] dulu)
+            $baseCdnUrl = $data['data']['base_url'] ?? '';
+            $path = $data['data']['path'] ?? '';
+            $chapterData = $data['data']['chapter']['data'] ?? [];
 
             foreach ($chapterData as $imageName) {
-                $images[] = rtrim($baseUrl, '/') . '/' . trim($path, '/') . '/' . ltrim($imageName, '/');
+                // Menggabungkan URL CDN, Path, dan Nama File Gambar
+                $images[] = rtrim($baseCdnUrl, '/') . '/' . trim($path, '/') . '/' . ltrim($imageName, '/');
             }
 
             return $images;

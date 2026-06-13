@@ -2,14 +2,18 @@
 use App\Services\ComicAggregatorService;
 use App\Models\Manga;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Cache;
 
 Route::get('/smoke-test', function (ComicAggregatorService $service) {
-    // 1. Eksekusi Adapter untuk mengambil 1 Chapter spesifik dari Shinigami
-    // (Ini menggunakan UUID yang kita intip di awal diskusi)
-    $mangaIdTarget = 'c0f1d049-ff7f-474d-8c6a-3a55e4c44147'; // ID Kaisar Demonic
-    $chapterIdTarget = 'f82f1ad6-ced3-47b8-97f0-7a36a1b5aa95'; // ID Chapter 868
     
-    // Simulasikan pembuatan Manga jika belum ada di database lokal
+    // ==========================================
+    // KDV RESETTER: Hapus semua ingatan Cache!
+    // ==========================================
+    Cache::flush(); 
+
+    $mangaIdTarget = 'c0f1d049-ff7f-474d-8c6a-3a55e4c44147'; 
+    $chapterIdTarget = 'f82f1ad6-ced3-47b8-97f0-7a36a1b5aa95'; 
+    
     $manga = Manga::firstOrCreate(
         ['source_manga_id' => $mangaIdTarget],
         [
@@ -22,10 +26,8 @@ Route::get('/smoke-test', function (ComicAggregatorService $service) {
         ]
     );
 
-    // 2. Gunakan Mesin Fase 3 untuk menarik URL Gambar Chapter
     $images = $service->fetchAndCacheChapterImages($mangaIdTarget, $chapterIdTarget);
     
-    // Tampilkan hasilnya langsung di layar (Dump & Die)
     dd([
         'Status' => 'MESIN BEKERJA SEMPURNA!',
         'Data Manga' => $manga->toArray(),

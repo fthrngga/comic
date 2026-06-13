@@ -83,9 +83,6 @@ class ScrapeShinigamiCommand extends Command
         $hasMoreChapters = true;
 
         while ($hasMoreChapters) {
-            // =========================================================
-            // PERBAIKAN FATAL: URL ENDPOINT CHAPTER YANG BENAR
-            // =========================================================
             $chapterEndpoint = "{$this->apiUrl}/v1/chapter/{$sourceMangaId}/list?page={$chapterPage}&page_size={$chapterPageSize}&sort_by=chapter_number&sort_order=desc";
             
             $customHeaders = array_merge($this->getHeaders(), [
@@ -115,7 +112,11 @@ class ScrapeShinigamiCommand extends Command
                         [
                             'chapter_number' => (float) ($chapterItem['chapter_number'] ?? 0),
                             'chapter_title' => $chapterItem['title'] ?? ("Chapter " . ($chapterItem['chapter_number'] ?? 0)),
-                            'pages_data' => null
+                            
+                            // ==========================================
+                            // FIX DATABASE: Mengirim Array Kosong, Bukan Null!
+                            // ==========================================
+                            'pages_data' => [] 
                         ]
                     );
                 }

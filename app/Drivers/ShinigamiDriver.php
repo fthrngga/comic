@@ -8,22 +8,18 @@ use Illuminate\Support\Facades\Log;
 
 class ShinigamiDriver implements ComicDriverInterface
 {
-    // Menggunakan domain API asli hasil temuan KDV & Bos Fathur
-    protected string $apiUrl = 'https://api.shngm.io'; 
+    protected string $apiUrl = 'https://api.shngm.io';
 
     public function getMangaDetails(string $sourceMangaId): array
     {
-        // Akan diimplementasikan nanti untuk auto-fetch manga
         return [];
     }
 
     public function getChapterImages(string $mangaId, string $chapterId): array
     {
         try {
-            // Menggunakan PATH ASLI: /v1/chapter/detail/{id}
             $endpoint = "{$this->apiUrl}/v1/chapter/detail/{$chapterId}";
 
-            // Header standar untuk menghindari blokir
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept' => 'application/json',
@@ -39,14 +35,24 @@ class ShinigamiDriver implements ComicDriverInterface
             $data = $response->json();
             $images = [];
 
-            // Membaca dari struktur JSON yang benar ($data['data'])
-            $baseCdnUrl = $data['data']['base_url'] ?? '';
-            $path = $data['data']['path'] ?? '';
+            $baseCdnUrl = rtrim($data['data']['base_url'] ?? 'https://assets.shngm.id', '/'); 
+            
+            // Kita abaikan variabel 'path' dari JSON mereka yang menyesatkan itu
             $chapterData = $data['data']['chapter']['data'] ?? [];
 
+            // ==========================================================
+            // KDV ABSOLUTE BYPASS: MERAKIT PATH BERDASARKAN BUKTI FORENSIK
+            // Pola: base_url / chapter / manga_{mangaId} / chapter_{chapterId} / nama_file.jpg
+            // ==========================================================
+            $forcedPath = "chapter/manga_{$mangaId}/chapter_{$chapterId}";
+
             foreach ($chapterData as $imageName) {
-                // Rakit URL gambar secara penuh
-                $images[] = rtrim($baseCdnUrl, '/') . '/' . trim($path, '/') . '/' . ltrim($imageName, '/');
+                if (is_string($imageName)) {
+                    $cleanImage = ltrim($imageName, '/');
+                    
+                    // Susun URL mutlak
+                    $images[] = $baseCdnUrl . '/' . $forcedPath . '/' . $cleanImage;
+                }
             }
 
             return $images;

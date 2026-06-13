@@ -51,6 +51,7 @@ class MangaController extends Controller
             $chapter->source_chapter_id
         );
 
+
         // Ambil navigasi prev/next chapter (opsional, bisa dikembangkan dari metadata API jika ada)
         $prevChapter = Chapter::where('manga_id', $chapter->manga_id)
             ->where('chapter_number', '<', $chapter->chapter_number)

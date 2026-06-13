@@ -47,9 +47,19 @@ export default function Show({ manga }) {
                     </div>
 
                     <div className="mt-6 flex gap-3">
-                        <button className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-md font-medium transition-colors text-sm">
-                            Read First Chapter
-                        </button>
+                        {/* PERBAIKAN 1: Tombol Read First Chapter menggunakan Link dan Rute yang benar */}
+                        {chapters.length > 0 ? (
+                            <Link 
+                                href={`/chapter/${chapters[0].id}`}
+                                className="bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-md font-medium transition-colors text-sm"
+                            >
+                                Read First Chapter
+                            </Link>
+                        ) : (
+                            <button disabled className="bg-slate-700 text-slate-500 px-6 py-2.5 rounded-md font-medium text-sm cursor-not-allowed border border-slate-600">
+                                No Chapters Yet
+                            </button>
+                        )}
                         <button className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-6 py-2.5 rounded-md font-medium transition-colors text-sm border border-slate-700">
                             Bookmark
                         </button>
@@ -68,14 +78,15 @@ export default function Show({ manga }) {
                 <div className="flex flex-col">
                     {chapters.length > 0 ? (
                         chapters.map((chapter) => (
+                            // PERBAIKAN 2: Tautan daftar chapter menggunakan Rute yang benar (/chapter/{id})
                             <Link 
                                 key={chapter.id} 
-                                href={`/manga/${manga?.slug}/chapter/${chapter.chapter_number}`}
+                                href={`/chapter/${chapter.id}`}
                                 className="bg-slate-800/50 hover:bg-slate-800 p-4 rounded-md mb-2 flex justify-between items-center transition-colors border border-transparent hover:border-slate-700 group"
                             >
                                 <div className="flex flex-col">
                                     <span className="text-slate-200 font-medium group-hover:text-violet-400 transition-colors">
-                                        Chapter {chapter.chapter_number} {chapter.chapter_title ? `- ${chapter.chapter_title}` : ''}
+                                        Chapter {chapter.chapter_number} {chapter.chapter_title && chapter.chapter_title !== `Chapter ${chapter.chapter_number}` ? `- ${chapter.chapter_title}` : ''}
                                     </span>
                                 </div>
                                 <div className="text-slate-500 text-xs font-medium">

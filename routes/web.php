@@ -1,39 +1,17 @@
 <?php
-use App\Services\ComicAggregatorService;
-use App\Models\Manga;
+
+use App\Drivers\ShinigamiDriver;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Cache;
 
-Route::get('/smoke-test', function (ComicAggregatorService $service) {
+Route::get('/smoke-test', function () {
+    // KDV BYPASS: Kita tembak langsung Driver-nya tanpa basa-basi!
+    $driver = new ShinigamiDriver();
     
-    // ==========================================
-    // KDV RESETTER: Hapus semua ingatan Cache!
-    // ==========================================
-    Cache::flush(); 
-
     $mangaIdTarget = 'c0f1d049-ff7f-474d-8c6a-3a55e4c44147'; 
     $chapterIdTarget = 'f82f1ad6-ced3-47b8-97f0-7a36a1b5aa95'; 
     
-    $manga = Manga::firstOrCreate(
-        ['source_manga_id' => $mangaIdTarget],
-        [
-            'title' => 'Kaisar Demonic (Test)',
-            'slug' => 'kaisar-demonic-test',
-            'cover_url' => 'https://assets.shngm.id/thumbnail/image/banner_1781309537826_df036w.jpg',
-            'status' => 'ongoing',
-            'type' => 'manhwa',
-            'source_code' => 'shinigami'
-        ]
-    );
-
-    $images = $service->fetchAndCacheChapterImages($mangaIdTarget, $chapterIdTarget);
-    
-    dd([
-        'Status' => 'MESIN BEKERJA SEMPURNA!',
-        'Data Manga' => $manga->toArray(),
-        'Total Gambar Ditarik' => count($images) . ' lembar',
-        'Array Gambar' => $images
-    ]);
+    // Jika file Driver di VPS sudah ter-update, baris ini PASTI akan memicu layar error bawaan dd() KDV Trap.
+    return $driver->getChapterImages($mangaIdTarget, $chapterIdTarget);
 });
 
 require __DIR__.'/auth.php';

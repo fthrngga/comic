@@ -1,3 +1,5 @@
+<?php
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -20,7 +22,6 @@ class ScrapeShinigamiCommand extends Command
 
         $this->info("Memulai proses scraping dari Shinigami API (Page: {$page}, Limit: {$limit} komik)...");
 
-        // 1. Ambil List Manga (Hanya untuk mendapat ID dan Metadata Dasar)
         $listEndpoint = "{$this->apiUrl}/v1/manga/list?type=project&page={$page}&page_size={$limit}&is_update=true&sort=latest&sort_order=desc";
         
         $response = Http::withHeaders($this->getHeaders())->timeout(15)->get($listEndpoint);
@@ -48,7 +49,6 @@ class ScrapeShinigamiCommand extends Command
                 
                 if (!$sourceMangaId) continue;
 
-                // 2. Simpan Metadata Manga
                 $manga = Manga::updateOrCreate(
                     ['source_manga_id' => $sourceMangaId],
                     [
@@ -62,9 +62,8 @@ class ScrapeShinigamiCommand extends Command
                     ]
                 );
 
-                // 3. SEDOT FULL CHAPTERS (Misteri Terpecahkan!)
-                // Menggunakan endpoint detail pagination yang baru kita temukan
-                $this->scrapeFullChapters($manga->id, $sourceMangaId);
+                $originalSlug = $mangaItem['slug'] ?? $sourceMangaId;
+                $this->scrapeFullChapters($manga->id, $sourceMangaId, $originalSlug);
 
             } catch (\Exception $e) {
                 Log::error("Error processing manga ID {$sourceMangaId}: " . $e->getMessage());
@@ -77,22 +76,20 @@ class ScrapeShinigamiCommand extends Command
         $this->info("Scraping selesai! Data berhasil dimasukkan ke database.");
     }
 
-    /**
-     * Fungsi khusus untuk menyedot RATUSAN chapter menggunakan pagination
-     */
-    private function scrapeFullChapters($mangaLocalId, $sourceMangaId)
+    private function scrapeFullChapters($mangaLocalId, $sourceMangaId, $originalSlug)
     {
         $chapterPage = 1;
-        $chapterPageSize = 100; // Tarik 100 chapter sekaligus per halaman biar cepat
+        $chapterPageSize = 100; 
         $hasMoreChapters = true;
 
         while ($hasMoreChapters) {
-            // Endpoint sakti yang ditemukan Bos Fathur: list?page=X&page_size=Y (dengan Referer spesifik)
-            $chapterEndpoint = "{$this->apiUrl}/v1/manga/{$sourceMangaId}/chapter/list?page={$chapterPage}&page_size={$chapterPageSize}&sort_by=chapter_number&sort_order=desc";
+            // =========================================================
+            // PERBAIKAN FATAL: URL ENDPOINT CHAPTER YANG BENAR
+            // =========================================================
+            $chapterEndpoint = "{$this->apiUrl}/v1/chapter/{$sourceMangaId}/list?page={$chapterPage}&page_size={$chapterPageSize}&sort_by=chapter_number&sort_order=desc";
             
-            // Shinigami sangat ketat di endpoint ini, Referer wajib mengarah ke halaman komik tersebut
             $customHeaders = array_merge($this->getHeaders(), [
-                'Referer' => "https://shinigami.to/series/{$sourceMangaId}"
+                'Referer' => "https://shinigami.to/series/{$originalSlug}"
             ]);
 
             $response = Http::withHeaders($customHeaders)->timeout(15)->get($chapterEndpoint);
@@ -102,7 +99,7 @@ class ScrapeShinigamiCommand extends Command
                 $chaptersArray = $chapterData['data']['data'] ?? ($chapterData['data'] ?? []);
 
                 if (empty($chaptersArray)) {
-                    $hasMoreChapters = false; // Stop loop jika sudah habis
+                    $hasMoreChapters = false; 
                     break;
                 }
 
@@ -123,7 +120,6 @@ class ScrapeShinigamiCommand extends Command
                     );
                 }
 
-                // Cek apakah masih ada halaman chapter berikutnya
                 $totalChapters = $chapterData['data']['total'] ?? 0;
                 $fetchedSoFar = $chapterPage * $chapterPageSize;
                 
@@ -131,11 +127,11 @@ class ScrapeShinigamiCommand extends Command
                     $hasMoreChapters = false;
                 } else {
                     $chapterPage++;
-                    sleep(1); // Jeda sopan antar halaman chapter
+                    sleep(1); 
                 }
             } else {
-                Log::warning("Failed to fetch chapters for manga {$sourceMangaId} on page {$chapterPage}");
-                $hasMoreChapters = false; // Stop loop jika error agar tidak infinite loop
+                Log::warning("Failed to fetch chapters for manga {$sourceMangaId} on page {$chapterPage}. HTTP Status: " . $response->status());
+                $hasMoreChapters = false; 
             }
         }
     }

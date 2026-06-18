@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Manga;
 use App\Models\Chapter;
+use App\Models\Genre; // WAJIB IMPORT MODEL GENRE
 use Illuminate\Support\Str;
 
 class ScrapeShinigamiCommand extends Command
 {
     protected $signature = 'comic:scrape-shinigami {--limit=10} {--page=1}';
-    protected $description = 'Scrape latest mangas and chapters from Shinigami API';
+    protected $description = 'Scrape latest mangas, chapters, and genres from Shinigami API';
     protected string $apiUrl = 'https://api.shngm.io';
 
     public function handle()
@@ -62,6 +63,35 @@ class ScrapeShinigamiCommand extends Command
                     ]
                 );
 
+                // ==========================================
+                // KDV PROTOCOL: EKSTRAKSI & RELASI GENRE
+                // ==========================================
+                // Mengakomodasi berbagai variasi struktur JSON untuk genre
+                $genresData = $mangaItem['taxonomies']['genre'] 
+                           ?? $mangaItem['taxonomies']['Genre'] 
+                           ?? $mangaItem['taxonomy']['genre'] 
+                           ?? $mangaItem['taxonomy']['Genre'] 
+                           ?? $mangaItem['genres'] 
+                           ?? [];
+                
+                $genreIds = [];
+
+                foreach ($genresData as $genreItem) {
+                    // Ekstrak nama genre baik dari format array asosiatif maupun string langsung
+                    $genreName = is_array($genreItem) ? ($genreItem['name'] ?? '') : $genreItem;
+                    
+                    if (!empty($genreName)) {
+                        // Simpan genre baru ke database jika belum ada
+                        $genre = Genre::firstOrCreate(['name' => trim($genreName)]);
+                        $genreIds[] = $genre->id;
+                    }
+                }
+
+                // Sinkronkan ke tabel pivot manga_genre
+                if (!empty($genreIds)) {
+                    $manga->genres()->sync($genreIds);
+                }
+
                 $originalSlug = $mangaItem['slug'] ?? $sourceMangaId;
                 $this->scrapeFullChapters($manga->id, $sourceMangaId, $originalSlug);
 
@@ -73,7 +103,7 @@ class ScrapeShinigamiCommand extends Command
         }
 
         $this->output->progressFinish();
-        $this->info("Scraping selesai! Data berhasil dimasukkan ke database.");
+        $this->info("Scraping selesai! Data dan Genre berhasil dimasukkan ke database.");
     }
 
     private function scrapeFullChapters($mangaLocalId, $sourceMangaId, $originalSlug)
@@ -112,10 +142,6 @@ class ScrapeShinigamiCommand extends Command
                         [
                             'chapter_number' => (float) ($chapterItem['chapter_number'] ?? 0),
                             'chapter_title' => $chapterItem['title'] ?? ("Chapter " . ($chapterItem['chapter_number'] ?? 0)),
-                            
-                            // ==========================================
-                            // FIX DATABASE: Mengirim Array Kosong, Bukan Null!
-                            // ==========================================
                             'pages_data' => [] 
                         ]
                     );

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Manga;
 use App\Models\Chapter;
+use App\Models\Genre; // Tambahkan import Model Genre
 use App\Services\ComicAggregatorService;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
@@ -12,19 +13,32 @@ class MangaController extends Controller
 {
     protected ComicAggregatorService $comicService;
 
-    // Inject Aggregator Service ke Controller
     public function __construct(ComicAggregatorService $comicService)
     {
         $this->comicService = $comicService;
     }
 
-    // 1. Halaman Depan: List Semua Komik
-    public function index()
+    // 1. Halaman Depan: List Semua Komik dengan Search & Filter
+    public function index(Request $request)
     {
-        $mangas = Manga::latest()->get();
-        
+        $mangas = Manga::query()
+            ->when($request->search, function ($query, $search) {
+                $query->where('title', 'like', '%' . $search . '%');
+            })
+            ->when($request->genre, function ($query, $genre) {
+                $query->whereHas('genres', function ($q) use ($genre) {
+                    $q->where('name', $genre);
+                });
+            })
+            ->latest()
+            ->get();
+
+        $genres = Genre::orderBy('name', 'asc')->get(); // Ambil semua genre urut abjad
+
         return Inertia::render('Manga/Index', [
-            'mangas' => $mangas
+            'mangas' => $mangas,
+            'genres' => $genres, // Lempar ke React
+            'filters' => $request->only(['search', 'genre']) // Simpan state pencarian
         ]);
     }
 
@@ -45,14 +59,11 @@ class MangaController extends Controller
     {
         $chapter = Chapter::with('manga')->findOrFail($chapterId);
         
-        // Panggil engine universal kita untuk ambil/cache gambar dari CDN target
         $images = $this->comicService->fetchAndCacheChapterImages(
             $chapter->manga->source_manga_id, 
             $chapter->source_chapter_id
         );
 
-
-        // Ambil navigasi prev/next chapter (opsional, bisa dikembangkan dari metadata API jika ada)
         $prevChapter = Chapter::where('manga_id', $chapter->manga_id)
             ->where('chapter_number', '<', $chapter->chapter_number)
             ->orderBy('chapter_number', 'desc')

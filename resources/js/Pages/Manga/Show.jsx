@@ -70,12 +70,12 @@ export default function Show({ manga }) {
                         chapters.map((chapter) => (
                             <Link 
                                 key={chapter.id} 
-                                href={`/manga/${manga?.slug}/chapter/${chapter.chapter_number}`}
+                                href={`/chapter/${chapter.id}`}
                                 className="bg-slate-800/50 hover:bg-slate-800 p-4 rounded-md mb-2 flex justify-between items-center transition-colors border border-transparent hover:border-slate-700 group"
                             >
                                 <div className="flex flex-col">
                                     <span className="text-slate-200 font-medium group-hover:text-violet-400 transition-colors">
-                                        Chapter {chapter.chapter_number} {chapter.chapter_title ? `- ${chapter.chapter_title}` : ''}
+                                        Chapter {Number(chapter.chapter_number)} {chapter.chapter_title && chapter.chapter_title !== `Chapter ${Number(chapter.chapter_number)}` ? `- ${chapter.chapter_title}` : ''}
                                     </span>
                                 </div>
                                 <div className="text-slate-500 text-xs font-medium">

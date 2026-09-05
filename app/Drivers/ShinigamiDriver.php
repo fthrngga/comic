@@ -41,7 +41,7 @@ class ShinigamiDriver implements ComicDriverInterface
 
             // Membaca dari struktur JSON yang benar ($data['data'])
             $baseCdnUrl = $data['data']['base_url'] ?? '';
-            $path = $data['data']['path'] ?? '';
+            $path = $data['data']['chapter']['path'] ?? '';
             $chapterData = $data['data']['chapter']['data'] ?? [];
 
             foreach ($chapterData as $imageName) {

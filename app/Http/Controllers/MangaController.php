@@ -48,7 +48,8 @@ class MangaController extends Controller
         // Panggil engine universal kita untuk ambil/cache gambar dari CDN target
         $images = $this->comicService->fetchAndCacheChapterImages(
             $chapter->manga->source_manga_id, 
-            $chapter->source_chapter_id
+            $chapter->source_chapter_id,
+            $chapter->manga->source_code
         );
 
         // Ambil navigasi prev/next chapter (opsional, bisa dikembangkan dari metadata API jika ada)

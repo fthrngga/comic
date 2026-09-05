@@ -7,9 +7,14 @@ use Illuminate\Support\Facades\Cache;
 
 class ComicAggregatorService
 {
-    public function __construct(
-        protected ComicDriverInterface $driver
-    ) {}
+    public function getDriver(string $sourceCode): ComicDriverInterface
+    {
+        return match($sourceCode) {
+            'shinigami' => app(\App\Drivers\ShinigamiDriver::class),
+            'komikcast' => app(\App\Drivers\KomikcastDriver::class),
+            default => throw new \Exception("Unsupported driver: {$sourceCode}")
+        };
+    }
 
     /**
      * Fetch chapter images, checking cache first.
@@ -17,14 +22,16 @@ class ComicAggregatorService
      *
      * @param string $mangaId
      * @param string $chapterId
+     * @param string $sourceCode
      * @return array
      */
-    public function fetchAndCacheChapterImages(string $mangaId, string $chapterId): array
+    public function fetchAndCacheChapterImages(string $mangaId, string $chapterId, string $sourceCode = 'shinigami'): array
     {
-        $cacheKey = "chapter_images:{$mangaId}:{$chapterId}";
+        $cacheKey = "chapter_images:{$sourceCode}:{$mangaId}:{$chapterId}";
 
-        return Cache::remember($cacheKey, 86400, function () use ($mangaId, $chapterId) {
-            return $this->driver->getChapterImages($mangaId, $chapterId);
+        return Cache::remember($cacheKey, 86400, function () use ($mangaId, $chapterId, $sourceCode) {
+            $driver = $this->getDriver($sourceCode);
+            return $driver->getChapterImages($mangaId, $chapterId);
         });
     }
 }

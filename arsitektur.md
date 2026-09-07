@@ -1,4 +1,4 @@
-# Blueprint Arsitektur Sistem: Anti-Gravity Comic Hub (Scalable Multi-Source Aggregator)
+# Blueprint Arsitektur Sistem: PhantomReader Comic Hub (Scalable Multi-Source Aggregator)
 **Arsitek:** KDV  
 **Versi:** 1.0.0  
 **Target Ekosistem:** Laravel 11 + Inertia.js + React + Redis + PostgreSQL/MySQL (VPS Hosted)

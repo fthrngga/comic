@@ -12,6 +12,7 @@ class ComicAggregatorService
         return match($sourceCode) {
             'shinigami' => app(\App\Drivers\ShinigamiDriver::class),
             'komikcast' => app(\App\Drivers\KomikcastDriver::class),
+            'mangadex' => app(\App\Drivers\MangaDexDriver::class),
             default => throw new \Exception("Unsupported driver: {$sourceCode}")
         };
     }

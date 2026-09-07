@@ -21,6 +21,7 @@ class Manga extends Model
         'type',
         'source_code',
         'source_manga_id',
+        'language'
     ];
 
     protected static function booted(): void

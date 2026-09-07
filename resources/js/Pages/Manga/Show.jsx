@@ -10,8 +10,9 @@ export default function Show({ manga }) {
                 <div className="w-full md:w-64 lg:w-72 shrink-0">
                     <div className="aspect-[3/4] w-full rounded-lg overflow-hidden shadow-xl shadow-black/50 bg-slate-800">
                         <img 
-                            src={manga?.cover_url || '/placeholder-cover.jpg'} 
+                            src={manga?.cover_url || '/images/default-cover.png'} 
                             alt={manga?.title} 
+                            onError={(e) => { e.target.onerror = null; e.target.src = '/images/default-cover.png'; }}
                             className="w-full h-full object-cover"
                         />
                     </div>

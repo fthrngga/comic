@@ -93,8 +93,8 @@ export default function ScraperProcess() {
                         ))}
                         
                         {loading && (
-                            <div className="text-green-500 animate-pulse mt-4">
-                                root@anti-gravity:~# Mengeksekusi request jaringan...
+                            <div className="text-emerald-500 mb-2">
+                                root@phantomreader:~# Mengeksekusi request jaringan...
                             </div>
                         )}
                     </div>

@@ -51,24 +51,41 @@ class ScrapingPanelController extends Controller
         $request->validate([
             'page' => 'required|integer|min:1',
             'limit' => 'nullable|integer|min:1',
-            'source' => 'required|string|in:komikcast,shinigami'
+            'source' => 'required|string|in:komikcast,shinigami,mangadex,globalcomix,mgread'
         ]);
 
         $page = $request->input('page');
         $limit = $request->input('limit', null);
         $source = $request->input('source');
-        
-        $commandName = $source === 'komikcast' ? 'comic:bulk-komikcast' : 'comic:scrape-shinigami';
 
-        $params = ['--page' => $page];
+        $params = [];
         if ($limit) {
             $params['--limit'] = $limit;
         }
 
         $outputBuffer = new BufferedOutput();
         
+        if ($source === 'komikcast') {
+            $command = 'scrape:komikcast:bulk';
+            $params['--pages'] = $page;
+        } elseif ($source === 'shinigami') {
+            $command = 'scrape:shinigami:bulk';
+            $params['--pages'] = $page;
+        } elseif ($source === 'globalcomix') {
+            $command = 'scrape:globalcomix:bulk';
+            $params['--pages'] = $page;
+        } elseif ($source === 'mgread') {
+            $command = 'scrape:mgread:bulk';
+            $params['--pages'] = $page;
+        } elseif ($source === 'mangadex') {
+            $command = 'scrape:mangadex:bulk';
+            $params['--limit'] = 10;
+        } else {
+            return response()->json(['error' => 'Invalid source selected for bulk scrape.'], 400);
+        }
+
         try {
-            Artisan::call($commandName, $params, $outputBuffer);
+            Artisan::call($command, $params, $outputBuffer);
             $log = $outputBuffer->fetch();
             return response()->json([
                 'success' => true,

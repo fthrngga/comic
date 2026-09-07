@@ -117,6 +117,9 @@ export default function ScrapingPanel() {
                                 >
                                     <option value="komikcast">Komikcast</option>
                                     <option value="shinigami">Shinigami</option>
+                                    <option value="mangadex">MangaDex (EN)</option>
+                                    <option value="globalcomix">GlobalComix (EN)</option>
+                                    <option value="mgread">Mgread.io (EN)</option>
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-3">

@@ -7,8 +7,8 @@ export default function MainLayout({ children }) {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link href="/" className="text-xl font-bold tracking-tight text-violet-500">
-                                Anti-Gravity
+                            <Link href="/" className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-500 tracking-tighter">
+                                PhantomReader
                             </Link>
                         </div>
                         <nav className="flex space-x-4 text-sm font-medium">

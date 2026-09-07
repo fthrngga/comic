@@ -19,12 +19,15 @@ class MangaController extends Controller
     }
 
     // 1. Halaman Depan: List Semua Komik
-    public function index()
+    public function index(Request $request)
     {
-        $mangas = Manga::latest()->get();
+        $lang = $request->query('lang', 'id'); // Default ke Indonesia
+        
+        $mangas = Manga::where('language', $lang)->latest()->get();
         
         return Inertia::render('Manga/Index', [
-            'mangas' => $mangas
+            'mangas' => $mangas,
+            'activeLanguage' => $lang
         ]);
     }
 

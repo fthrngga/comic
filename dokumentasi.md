@@ -1,7 +1,7 @@
-# Dokumentasi Proyek: Anti-Gravity Comic Hub
+# Dokumentasi Proyek: PhantomReader Comic Hub
 
 ## 1. Tujuan Proyek
-Anti-Gravity Comic Hub adalah sebuah platform **Scalable Multi-Source Aggregator** untuk membaca komik (Manga, Manhwa, Manhua). Tujuannya adalah menjadi satu pusat baca komik terpadu yang dapat mengambil data dari berbagai website atau API sumber berbeda (seperti Shinigami, Asura, dll) tanpa harus terkunci atau bergantung pada satu sumber tunggal. 
+PhantomReader Comic Hub adalah sebuah platform **Scalable Multi-Source Aggregator** untuk membaca komik (Manga, Manhwa, Manhua). Tujuannya adalah menjadi satu pusat baca komik terpadu yang dapat mengambil data dari berbagai website atau API sumber berbeda (seperti Shinigami, Asura, dll) tanpa harus terkunci atau bergantung pada satu sumber tunggal. 
 
 ## 2. Tech Stack (Teknologi yang Digunakan)
 - **Backend:** Laravel 11 (PHP 8.3)

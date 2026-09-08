@@ -54,8 +54,8 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-autoloader
 
 # Copy package files and install Node dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install --no-audit --no-fund
 
 # Copy the rest of the application
 COPY . .

@@ -1,9 +1,8 @@
 services:
   - type: web
     name: phantom-reader
-    runtime: php
-    buildCommand: "bash render-build.sh"
-    startCommand: "vendor/bin/heroku-php-apache2 public/"
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     plan: free
     envVars:
       - key: APP_NAME
@@ -13,7 +12,7 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_KEY
-        generateValue: true
+        sync: false
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST

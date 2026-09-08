@@ -21,7 +21,8 @@ export default function ScrapingPanel() {
 
     const { data: bulkData, setData: setBulkData } = useForm({
         page: 1,
-        limit: 10
+        limit: 10,
+        source: 'komikcast'  // ✅ inisialisasi default source
     });
 
     const handleSingleScrape = async (e) => {
@@ -32,11 +33,18 @@ export default function ScrapingPanel() {
         setOutput(prev => prev + `\n> Menjalankan Single Scrape untuk [${singleData.slug}] di [${singleData.source}]...\n`);
         
         try {
-            const response = await axios.post('/scraping/run-single', singleData);
-            setOutput(prev => prev + response.data.output + "\n");
+            const response = await axios.post('/scraping/run-single', singleData, {
+                timeout: 25000 // 25 detik (batas Render ~30s)
+            });
+            const output = response.data?.output || response.data?.message || '[Tidak ada output]';
+            setOutput(prev => prev + output + "\n");
         } catch (error) {
-            const errorOutput = error.response?.data?.output || error.message;
-            setOutput(prev => prev + "[ERROR] " + errorOutput + "\n");
+            if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                setOutput(prev => prev + "[TIMEOUT] Request melebihi 30 detik. Render free tier tidak mendukung scraping panjang. Gunakan limit lebih kecil.\n");
+            } else {
+                const errorOutput = error.response?.data?.output || error.response?.data?.message || error.message || 'Unknown error';
+                setOutput(prev => prev + "[ERROR] " + errorOutput + "\n");
+            }
         } finally {
             setIsRunning(false);
         }
@@ -50,11 +58,18 @@ export default function ScrapingPanel() {
         setOutput(prev => prev + `\n> Menjalankan Bulk Scrape pada halaman [${bulkData.page}] dengan limit [${bulkData.limit || 'ALL'}]...\n`);
         
         try {
-            const response = await axios.post('/scraping/run-bulk', bulkData);
-            setOutput(prev => prev + response.data.output + "\n");
+            const response = await axios.post('/scraping/run-bulk', bulkData, {
+                timeout: 25000 // 25 detik (batas Render ~30s)
+            });
+            const output = response.data?.output || response.data?.message || '[Tidak ada output]';
+            setOutput(prev => prev + output + "\n");
         } catch (error) {
-            const errorOutput = error.response?.data?.output || error.message;
-            setOutput(prev => prev + "[ERROR] " + errorOutput + "\n");
+            if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                setOutput(prev => prev + "[TIMEOUT] ⚠️ Request melebihi 30 detik. Render free tier membatasi durasi request HTTP. Scraping dibatalkan.\n");
+            } else {
+                const errorOutput = error.response?.data?.output || error.response?.data?.message || error.message || 'Unknown error';
+                setOutput(prev => prev + "[ERROR] " + errorOutput + "\n");
+            }
         } finally {
             setIsRunning(false);
         }
